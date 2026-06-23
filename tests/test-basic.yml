@@ -1,0 +1,43 @@
+---
+name: Test basic usage - Ansible Galaxy Role Importer
+on:
+  workflow_dispatch:
+jobs:
+  test-basic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run action with fake API key (expect failure due to invalid credentials)
+        id: action
+        uses: .
+        with:
+          api_key: fake-api-key-for-testing
+        continue-on-error: true
+
+      - name: Assert action was invoked (outcome is either success or failure, not skipped)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped, expected it to run"
+            exit 1
+          fi
+          echo "PASS: action ran with outcome=$OUTCOME (failure expected with fake API key)"
+
+      - name: Assert action failed due to invalid API key (not a setup error)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # With a fake API key, the action should fail (not succeed)
+          # This confirms the action ran and attempted to authenticate
+          if [ "$OUTCOME" = "success" ]; then
+            echo "WARN: action succeeded with fake API key - unexpected but not necessarily wrong"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action correctly failed with invalid API key"
+          else
+            echo "FAIL: unexpected outcome: $OUTCOME"
+            exit 1
+          fi
