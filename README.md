@@ -8,6 +8,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
+| v1.0.5 | [`v1.0.5`](https://github.com/chainguard-actions/hspaans-ansible-galaxy-action/tree/v1.0.5) | [`bad0984`](https://github.com/hspaans/ansible-galaxy-action/commit/bad09844856e2954448f8736477d6ebb34f91ed6) |
 | v1.1.0 | [`v1.1.0`](https://github.com/chainguard-actions/hspaans-ansible-galaxy-action/tree/v1.1.0) | [`487a2be`](https://github.com/hspaans/ansible-galaxy-action/commit/487a2bef946f0e6ea54d30a92761126015ed10e8) |
 
 ## Privacy
