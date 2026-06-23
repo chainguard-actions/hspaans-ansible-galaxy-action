@@ -1,0 +1,1 @@
+# hspaans-ansible-galaxy-action
