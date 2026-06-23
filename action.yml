@@ -1,0 +1,18 @@
+---
+name: 'Ansible Galaxy Role Importer'
+description: 'Github Action for import your role into Ansible Galaxy.'
+
+inputs:
+  api_key:
+    description: 'Ansible Galaxy API Key'
+    required: true
+
+runs:
+  using: 'docker'
+  image: 'docker://ghcr.io/hspaans/ansible-galaxy-action@sha256:a1f54799c9fc053c83ce13855330b39a5242377b524e73ef1404813818224416' # 1.0.5
+  env:
+    ACTION_API_KEY: ${{ inputs.api_key }}
+
+branding:
+  icon: 'book'
+  color: 'gray-dark'

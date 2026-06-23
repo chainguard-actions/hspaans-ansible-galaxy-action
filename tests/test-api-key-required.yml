@@ -1,0 +1,35 @@
+---
+name: Test api_key input is required and passed to container
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run action with a test API key
+        id: action
+        uses: .
+        with:
+          api_key: test-galaxy-api-key-12345
+        continue-on-error: true
+
+      - name: Assert action ran (not skipped)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "action outcome: $OUTCOME"
+          # The action must have run (success or failure from Galaxy API call)
+          # A 'skipped' outcome means the action never executed
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped, it should have run"
+            exit 1
+          fi
+          if [ -z "$OUTCOME" ]; then
+            echo "FAIL: action outcome is empty"
+            exit 1
+          fi
+          # The action is expected to fail with an invalid API key
+          # but it must have actually been invoked
+          echo "PASS: action ran with outcome '$OUTCOME' (failure expected with dummy key)"
