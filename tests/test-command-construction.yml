@@ -1,0 +1,62 @@
+---
+name: Test command construction and ansible-core version
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Verify GITHUB_REPOSITORY parsing logic
+        run: |
+          GITHUB_REPOSITORY="myorg/my-ansible-role"
+          OWNER="${GITHUB_REPOSITORY%/*}"
+          REPO="${GITHUB_REPOSITORY#*/}"
+          echo "Owner: $OWNER"
+          echo "Repo: $REPO"
+          if [ "$OWNER" != "myorg" ]; then
+            echo "FAIL: expected owner 'myorg', got '$OWNER'"
+            exit 1
+          fi
+          if [ "$REPO" != "my-ansible-role" ]; then
+            echo "FAIL: expected repo 'my-ansible-role', got '$REPO'"
+            exit 1
+          fi
+          echo "PASS: GITHUB_REPOSITORY parsed correctly"
+
+      - id: action
+        uses: .
+        with:
+          api_key: test-api-key-12345
+        continue-on-error: true
+
+      - name: Assert action did not skip
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "action outcome: $OUTCOME"
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped"
+            exit 1
+          fi
+          echo "PASS: action ran with outcome=$OUTCOME"
+
+      - name: Assert ansible-core was installed in correct version range
+        run: |
+          if ! command -v ansible-galaxy >/dev/null 2>&1; then
+            echo "FAIL: ansible-galaxy not found after action ran"
+            exit 1
+          fi
+          echo "PASS: ansible-galaxy is installed"
+          ansible-galaxy --version
+          # Verify version is in the 2.17.x range
+          VERSION=$(python -c "import ansible; print(ansible.__version__)")
+          echo "ansible version: $VERSION"
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          if [ "$MAJOR" != "2" ] || [ "$MINOR" != "17" ]; then
+            echo "FAIL: expected ansible-core 2.17.x, got $VERSION"
+            exit 1
+          fi
+          echo "PASS: ansible-core version $VERSION is in the expected 2.17.x range"

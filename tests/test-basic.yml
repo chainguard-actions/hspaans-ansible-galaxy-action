@@ -1,0 +1,52 @@
+---
+name: Test basic usage - ansible-core installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Verify ansible-galaxy is not yet installed
+        run: |
+          if command -v ansible-galaxy >/dev/null 2>&1; then
+            echo "INFO: ansible-galaxy already present before action runs"
+          else
+            echo "INFO: ansible-galaxy not present before action runs (expected)"
+          fi
+
+      - id: action
+        uses: .
+        with:
+          api_key: fake-api-key-for-testing
+        continue-on-error: true
+
+      - name: Assert ansible-core was installed by the action
+        run: |
+          if ! command -v ansible-galaxy >/dev/null 2>&1; then
+            echo "FAIL: ansible-galaxy not found after action ran"
+            exit 1
+          fi
+          echo "PASS: ansible-galaxy is installed"
+          ansible-galaxy --version
+
+      - name: Assert ansible python module is importable
+        run: |
+          if ! python -c "import ansible" 2>/dev/null; then
+            echo "FAIL: ansible python module not found"
+            exit 1
+          fi
+          echo "PASS: ansible python module is available"
+          python -c "import ansible; print('ansible version:', ansible.__version__)"
+
+      - name: Assert action ran (not skipped)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "action outcome: $OUTCOME"
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action ran (outcome=$OUTCOME)"
