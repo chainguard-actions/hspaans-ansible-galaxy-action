@@ -9,7 +9,7 @@ inputs:
 
 runs:
   using: 'docker'
-  image: 'docker://ghcr.io/hspaans/ansible-galaxy-action@sha256:e70a64946de4e55f16ab35001338380a3b7706d7825941449040486890a9acac' # 1.1.0
+  image: 'docker://ghcr.io/hspaans/ansible-galaxy-action:1.1.0@sha256:e70a64946de4e55f16ab35001338380a3b7706d7825941449040486890a9acac'
   env:
     ACTION_API_KEY: ${{ inputs.api_key }}
 

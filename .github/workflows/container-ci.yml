@@ -1,0 +1,13 @@
+---
+name: Container CI
+
+on:
+  pull_request:
+  schedule:
+    - cron: '21 21 9 * *'
+
+permissions: {}
+
+jobs:
+  container-ci:
+    uses: hspaans/.github/.github/workflows/container-ci.yml@880d91388b14f0155475ac3d961e4aa6d0225df8 # master

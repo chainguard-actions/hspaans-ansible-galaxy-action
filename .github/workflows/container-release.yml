@@ -1,0 +1,63 @@
+---
+name: Container Release
+
+on:
+  push:
+    # Publish `master` as Docker `latest` image.
+    branches:
+      - master
+      - v*
+
+    # Publish `v1.2.3` tags as releases.
+    tags:
+      - v*
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  # Push image to GitHub Packages.
+  # See also https://docs.docker.com/docker-hub/builds/
+  container-release:
+    # Ensure test job passes before pushing image.
+    name: Build and Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Login to Packages Container registry
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Container Reference Name
+        id: container_ref
+        env:
+          GITHUB_REF: ${{ github.ref }}
+        run: |
+          # Strip git ref prefix from version
+          NAME=$(printf '%s' "$GITHUB_REF" | sed -e 's,.*/\(.*\),\1,; s/^v//')
+          # Use Docker `latest` tag convention
+          [ "$NAME" == "master" ] && NAME=latest
+          # Sanitize and expose variables
+          safe=$(printf '%s' "$NAME" | tr -d '\n\r')
+          echo "ref_name=$safe" >> "$GITHUB_ENV"
+
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5
+        with:
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/${{ github.repository }}:${{ env.ref_name }}
